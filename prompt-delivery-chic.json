@@ -1,15 +1,15 @@
 {
   "Comment": "An example of using Bedrock to chain prompts and their responses together.",
-  "StartAt": "Invoke model with first prompt",
+  "StartAt": "Invoke model sugestao de comida - prompt_one",
   "States": {
-    "Invoke model with first prompt": {
+    "Invoke model sugestao de comida - prompt_one": {
       "Type": "Task",
       "Resource": "arn:aws:states:::bedrock:invokeModel",
       "Parameters": {
         "ModelId": "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
         "Body": {
           "anthropic_version": "bedrock-2023-05-31",
-          "max_tokens": 200,
+          "max_tokens": 400,
           "messages": [
             {
               "role": "user",
@@ -33,20 +33,20 @@
     },
     "Add first result to conversation history": {
       "Type": "Pass",
-      "Next": "Invoke model with second prompt",
+      "Next": "Invoke model sugestao de bebidas - prompt_two",
       "Parameters": {
         "convo_one.$": "States.Format('{}\n{}', $.prompt_one, $.result_one.result_one)"
       },
       "ResultPath": "$.convo_one"
     },
-    "Invoke model with second prompt": {
+    "Invoke model sugestao de bebidas - prompt_two": {
       "Type": "Task",
       "Resource": "arn:aws:states:::bedrock:invokeModel",
       "Parameters": {
         "ModelId": "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
         "Body": {
           "anthropic_version": "bedrock-2023-05-31",
-          "max_tokens": 200,
+          "max_tokens": 400,
           "messages": [
             {
               "role": "user",
@@ -70,27 +70,27 @@
     },
     "Add second result to conversation history": {
       "Type": "Pass",
-      "Next": "Invoke model with third prompt",
+      "Next": "Invoke model sugestao de musica - prompt_three",
       "Parameters": {
         "convo_two.$": "States.Format('{}\n{}\n{}', $.convo_one.convo_one, $.prompt_two, $.result_two.result_two)"
       },
       "ResultPath": "$.convo_two"
     },
-    "Invoke model with third prompt": {
+    "Invoke model sugestao de musica - prompt_three": {
       "Type": "Task",
       "Resource": "arn:aws:states:::bedrock:invokeModel",
       "Parameters": {
         "ModelId": "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
         "Body": {
           "anthropic_version": "bedrock-2023-05-31",
-          "max_tokens": 200,
+          "max_tokens": 400,
           "messages": [
             {
               "role": "user",
               "content": [
                 {
                   "type": "text",
-                  "text": "Indique uma lista com 5 compositores de música para acompanhar o jantar."
+                  "text": "Indique uma lista com 3 compositores de música para acompanhar o jantar."
                 }
               ]
             }
@@ -99,10 +99,19 @@
         "ContentType": "application/json",
         "Accept": "*/*"
       },
-      "End": true,
       "ResultSelector": {
         "result_three.$": "$.Body.content[0].text"
-      }
+      },
+      "Next": "Add three result to conversation history",
+      "ResultPath": "$.result_three"
+    },
+    "Add three result to conversation history": {
+      "Type": "Pass",
+      "End": true,
+      "Parameters": {
+        "convo_three.$": "States.Format('{}\n{}\n{}', $.convo_two.convo_two, $.prompt_three, $.result_three.result_three)"
+      },
+      "ResultPath": "$.convo_three"
     }
   }
 }
